@@ -10,9 +10,11 @@ One-command install for the full Hermes stack on any Linux machine.
 
 ## One-liner
 
-    curl -fsSL https://raw.githubusercontent.com/ChonSong/hermes-bootstrap/main/setup.sh | bash
+```bash
+GITHUB_TOKEN=ghp_your_token_here curl -fsSL https://raw.githubusercontent.com/ChonSong/hermes-bootstrap/main/setup.sh | bash
+```
 
-You will be prompted for a GitHub PAT (classic, repo scope needed).
+Get your token at https://github.com/settings/tokens — needs **repo** (full) scope for private repos.
 
 ## After install
 
