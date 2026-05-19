@@ -10,17 +10,16 @@ PASSPHRASE="${PASSPHRASE:-dawnofdoyle}"
 echo "==> Hermes bootstrap"
 echo ""
 
-# GitHub PAT
+# GitHub PAT (required)
 if [[ -z "${GITHUB_TOKEN}" ]]; then
-    echo "GitHub Personal Access Token required."
-    echo "  Create at: https://github.com/settings/tokens"
-    echo "  Need: repo (full) scope"
+    echo "Error: GITHUB_TOKEN environment variable not set."
     echo ""
-    read -r -p "Paste your PAT (ghp_...): " GITHUB_TOKEN
-    if [[ -z "$GITHUB_TOKEN" ]]; then
-        echo "No token provided. Exiting."
-        exit 1
-    fi
+    echo "  Usage:  GITHUB_TOKEN=ghp_xxx curl -fsSL .../setup.sh | bash"
+    echo "  Or:     export GITHUB_TOKEN=ghp_xxx  # then run the curl command"
+    echo ""
+    echo "  Create a PAT at: https://github.com/settings/tokens"
+    echo "  Required scope: repo (full) — for private repos hermes-sync, hermes-webui"
+    exit 1
 fi
 export GITHUB_TOKEN
 AUTH_BASE="https://${GITHUB_TOKEN}@github.com"
@@ -38,16 +37,19 @@ case "$PKG_MGR" in
     pacman)  sudo pacman -Syu --noconfirm docker docker-compose git python3-cryptography curl rsync ;;
 esac
 
-# Clone hermes-bootstrap (this repo)
+# Git credential helper — needed for pulls after clones
+git config --global credential.helper "store"
+
+# Clone hermes-bootstrap (this repo — public)
 if [[ -d "$HERMES_BOOTSTRAP_DIR/.git" ]]; then
     echo "==> Updating hermes-bootstrap..."
     git -C "$HERMES_BOOTSTRAP_DIR" pull
 else
     echo "==> Cloning hermes-bootstrap..."
-    git clone "${AUTH_BASE}/ChonSong/hermes-bootstrap.git" "$HERMES_BOOTSTRAP_DIR"
+    git clone "https://github.com/ChonSong/hermes-bootstrap.git" "$HERMES_BOOTSTRAP_DIR"
 fi
 
-# Clone hermes-sync (private config repo)
+# Clone hermes-sync (private)
 if [[ -d "$HERMES_SYNC_DIR/.git" ]]; then
     echo "==> Updating hermes-sync..."
     git -C "$HERMES_SYNC_DIR" pull
@@ -56,17 +58,18 @@ else
     git clone "${AUTH_BASE}/ChonSong/hermes-sync.git" "$HERMES_SYNC_DIR"
 fi
 
-# Clone hermes-agent
+# Clone hermes-agent (public fork of NousResearch)
 HERMES_AGENT_DIR="$(dirname "$HERMES_SYNC_DIR")/hermes-agent"
 if [[ -d "$HERMES_AGENT_DIR/.git" ]]; then
     echo "==> Updating hermes-agent..."
     git -C "$HERMES_AGENT_DIR" pull
 else
     echo "==> Cloning hermes-agent..."
-    git clone "${AUTH_BASE}/NousResearch/hermes-agent.git" "$HERMES_AGENT_DIR"
+    git clone "${AUTH_BASE}/ChonSong/hermes-agent.git" "$HERMES_AGENT_DIR" || \
+    git clone "https://github.com/NousResearch/hermes-agent.git" "$HERMES_AGENT_DIR"
 fi
 
-# Clone hermes-webui
+# Clone hermes-webui (private)
 HERMES_WEBUI_DIR="$(dirname "$HERMES_SYNC_DIR")/hermes-webui"
 if [[ -d "$HERMES_WEBUI_DIR/.git" ]]; then
     echo "==> Updating hermes-webui..."
@@ -80,12 +83,9 @@ fi
 if [[ ! -d "$HERMES_DIR/.git" ]]; then
     echo "==> Initializing $HERMES_DIR..."
     mkdir -p "$HERMES_DIR"
-    git init
-    git remote add origin "${AUTH_BASE}/ChonSong/hermes-sync.git"
+    git -C "$HERMES_DIR" init
+    git -C "$HERMES_DIR" remote add origin "${AUTH_BASE}/ChonSong/hermes-sync.git"
 fi
-
-# Git credential helper
-git config --global credential.helper "store"
 
 # Restore secrets
 if [[ -f "${HERMES_SYNC_DIR}/secrets.age" ]]; then
