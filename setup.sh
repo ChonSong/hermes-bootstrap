@@ -121,13 +121,15 @@ print("  Secrets restored.")
 PYEOF
 fi
 
-# Sync files
+# Sync files — copy from hermes-sync git clone to ~/.hermes/
 echo "==> Syncing files..."
 mkdir -p "${HERMES_DIR}/skills" "${WORKSPACE_DIR}"
-rsync -av --delete "${HERMES_SYNC_DIR}/config/"   "${HERMES_DIR}/"
-rsync -av --delete "${HERMES_SYNC_DIR}/skills/"   "${HERMES_DIR}/skills/"
-rsync -av "${HERMES_SYNC_DIR}/memory/"            "${HERMES_DIR}/memories/"
-rsync -av "${HERMES_SYNC_DIR}/SOUL.md"            "${HERMES_DIR}/"
+# config.yaml goes to ~/.hermes/config.yaml (not a directory)
+cp "${HERMES_SYNC_DIR}/config.yaml" "${HERMES_DIR}/config.yaml"
+rsync -av --delete "${HERMES_SYNC_DIR}/skills/"    "${HERMES_DIR}/skills/"
+rsync -av "${HERMES_SYNC_DIR}/memory/"             "${HERMES_DIR}/memories/"
+rsync -av "${HERMES_SYNC_DIR}/memories/"           "${HERMES_DIR}/memories/"
+rsync -av "${HERMES_SYNC_DIR}/SOUL.md"             "${HERMES_DIR}/"
 rsync -av --delete "${HERMES_SYNC_DIR}/workspace/" "${WORKSPACE_DIR}/"
 
 # Start containers
