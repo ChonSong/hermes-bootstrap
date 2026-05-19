@@ -37,8 +37,9 @@ case "$PKG_MGR" in
     pacman)  sudo pacman -Syu --noconfirm docker docker-compose git python3-cryptography curl rsync ;;
 esac
 
-# Git credential helper — needed for pulls after clones
+# Git credential helper — cache the PAT so clones/pulls don't need it in the URL
 git config --global credential.helper "store"
+echo "https://${GITHUB_TOKEN}@github.com" > ~/.git-credentials
 
 # Clone hermes-bootstrap (this repo — public)
 if [[ -d "$HERMES_BOOTSTRAP_DIR/.git" ]]; then
@@ -55,7 +56,7 @@ if [[ -d "$HERMES_SYNC_DIR/.git" ]]; then
     git -C "$HERMES_SYNC_DIR" pull
 else
     echo "==> Cloning hermes-sync..."
-    git clone "${AUTH_BASE}/ChonSong/hermes-sync.git" "$HERMES_SYNC_DIR"
+    git clone "https://github.com/ChonSong/hermes-sync.git" "$HERMES_SYNC_DIR"
 fi
 
 # Clone hermes-agent (public fork of NousResearch)
@@ -65,7 +66,6 @@ if [[ -d "$HERMES_AGENT_DIR/.git" ]]; then
     git -C "$HERMES_AGENT_DIR" pull
 else
     echo "==> Cloning hermes-agent..."
-    git clone "${AUTH_BASE}/ChonSong/hermes-agent.git" "$HERMES_AGENT_DIR" || \
     git clone "https://github.com/NousResearch/hermes-agent.git" "$HERMES_AGENT_DIR"
 fi
 
@@ -76,7 +76,7 @@ if [[ -d "$HERMES_WEBUI_DIR/.git" ]]; then
     git -C "$HERMES_WEBUI_DIR" pull
 else
     echo "==> Cloning hermes-webui..."
-    git clone "${AUTH_BASE}/ChonSong/hermes-webui.git" "$HERMES_WEBUI_DIR"
+    git clone "https://github.com/ChonSong/hermes-webui.git" "$HERMES_WEBUI_DIR"
 fi
 
 # Init hermes dir git repo (for backup cron)
